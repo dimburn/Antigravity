@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gto-dojo-v3';
+const CACHE_NAME = 'gto-dojo-v4';
 const ASSETS = [
     './',
     './index.html',

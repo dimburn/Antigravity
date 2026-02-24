@@ -1,22 +1,46 @@
 {
     "name": "GTO Dojo",
     "short_name": "GTO Dojo",
-    "description": "テキサスホールデム GTO練習アプリ",
-    "start_url": "./index.html",
+    "description": "GTOを身体で覚えるポーカートレーニング",
+    "start_url": ".",
+    "scope": ".",
+    "id": "/product/gto_dojo/",
     "display": "standalone",
+    "display_override": [
+        "standalone",
+        "minimal-ui"
+    ],
     "background_color": "#0a0a1a",
     "theme_color": "#0a0a1a",
     "orientation": "portrait",
+    "categories": [
+        "games",
+        "education"
+    ],
     "icons": [
         {
             "src": "assets/icons/icon-192.png",
             "sizes": "192x192",
-            "type": "image/png"
+            "type": "image/png",
+            "purpose": "any"
         },
         {
             "src": "assets/icons/icon-512.png",
             "sizes": "512x512",
-            "type": "image/png"
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "assets/icons/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "assets/icons/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
         }
     ]
 }

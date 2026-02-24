@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#1a1a2e">
+    <meta name="description" content="ポーカー収支・スタッツを手軽に記録">
+    <title>Poker Kiroku</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <div id="app">
+        <!-- ホーム画面 -->
+        <div id="home-screen" class="screen active">
+            <header class="app-header">
+                <h1>🎴 Poker Kiroku</h1>
+                <p class="subtitle">ポーカー記録アプリ</p>
+            </header>
+
+            <!-- 期間フィルター -->
+            <div class="period-filter">
+                <button class="filter-btn active" onclick="setPeriod('all')">全期間</button>
+                <button class="filter-btn" onclick="setPeriod('week')">1週間</button>
+                <button class="filter-btn" onclick="setPeriod('month')">1ヶ月</button>
+                <button class="filter-btn" onclick="setPeriod('3month')">3ヶ月</button>
+            </div>
+
+            <div class="stats-summary glass-card">
+                <h3>スタッツ <span id="period-label">(全期間)</span></h3>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-value" id="total-profit">0 BB</span>
+                        <span class="stat-label">収支</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="total-winrate">--%</span>
+                        <span class="stat-label">勝率</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="total-vpip">--%</span>
+                        <span class="stat-label">VPIP</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="total-pfr">--%</span>
+                        <span class="stat-label">PFR</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="total-3bet">--%</span>
+                        <span class="stat-label">3Bet</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="total-sessions">0</span>
+                        <span class="stat-label">セッション</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 収支グラフ -->
+            <div class="chart-container glass-card">
+                <h3>収支推移 (BB)</h3>
+                <canvas id="profit-chart"></canvas>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn btn-primary btn-large" onclick="showScreen('setup-screen')">
+                    ▶ 新しいセッションを開始
+                </button>
+                <button class="btn btn-secondary" onclick="showScreen('history-screen')">
+                    📜 履歴を見る
+                </button>
+            </div>
+        </div>
+
+        <!-- セッション設定画面 -->
+        <div id="setup-screen" class="screen">
+            <header class="app-header">
+                <button class="btn-back" onclick="showScreen('home-screen')">← 戻る</button>
+                <h2>セッション設定</h2>
+            </header>
+
+            <form id="session-form" class="glass-card">
+                <div class="form-group">
+                    <label>ゲーム種類</label>
+                    <div class="toggle-group">
+                        <button type="button" class="toggle-btn active" data-value="cash"
+                            onclick="selectGameType(this)">💵 キャッシュ</button>
+                        <button type="button" class="toggle-btn" data-value="tournament"
+                            onclick="selectGameType(this)">🏆 トーナメント</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>ステークス</label>
+                    <div class="toggle-group toggle-group-wrap" id="stakes-group">
+                        <button type="button" class="toggle-btn" data-sb="1" data-bb="2" data-ante="0"
+                            onclick="selectStakes(this)">1-2</button>
+                        <button type="button" class="toggle-btn active" data-sb="1" data-bb="2" data-ante="2"
+                            onclick="selectStakes(this)">1-2-2</button>
+                        <button type="button" class="toggle-btn" data-sb="2" data-bb="5" data-ante="0"
+                            onclick="selectStakes(this)">2-5</button>
+                        <button type="button" class="toggle-btn" data-sb="5" data-bb="10" data-ante="0"
+                            onclick="selectStakes(this)">5-10</button>
+                        <button type="button" class="toggle-btn" data-sb="0" data-bb="0" data-ante="0"
+                            onclick="showCustomStakes()">カスタム</button>
+                    </div>
+                </div>
+
+                <div class="form-group" id="custom-stakes-group" style="display: none;">
+                    <label>カスタムステークス</label>
+                    <div class="input-row">
+                        <input type="number" id="custom-sb" placeholder="SB">
+                        <input type="number" id="custom-bb" placeholder="BB">
+                        <input type="number" id="custom-ante" placeholder="アンティ">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>テーブルサイズ</label>
+                    <div class="toggle-group">
+                        <button type="button" class="toggle-btn" data-value="2"
+                            onclick="selectTableSize(this)">HU</button>
+                        <button type="button" class="toggle-btn active" data-value="6"
+                            onclick="selectTableSize(this)">6max</button>
+                        <button type="button" class="toggle-btn" data-value="9"
+                            onclick="selectTableSize(this)">9max</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="buyin">バイイン (BB)</label>
+                    <input type="number" id="buyin" placeholder="100" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="location">場所 (任意)</label>
+                    <input type="text" id="location" placeholder="例: アミューズメント渋谷">
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-large">🎯 セッション開始</button>
+            </form>
+        </div>
+
+        <!-- HUD画面 -->
+        <div id="hud-screen" class="screen">
+            <header class="hud-header">
+                <div class="session-info">
+                    <span id="hud-game-type">💵</span>
+                    <span id="hud-stakes">1-2-2</span>
+                    <span id="hud-hand-count">#0</span>
+                </div>
+                <button class="btn btn-danger btn-small" onclick="endSession()">終了</button>
+            </header>
+
+            <!-- ハンド表示エリア -->
+            <div class="hand-display glass-card" onclick="openCardPicker()">
+                <div class="hand-cards" id="hand-cards">
+                    <div class="card-placeholder">?</div>
+                    <div class="card-placeholder">?</div>
+                </div>
+                <div class="hand-hint">タップしてハンドを選択</div>
+            </div>
+
+            <!-- ポジション表示 -->
+            <div class="position-display glass-card">
+                <div class="position-label">ポジション</div>
+                <div class="position-value" id="current-position" onclick="cyclePosition()">BTN</div>
+            </div>
+
+            <!-- リアルタイムスタッツ -->
+            <div class="live-stats">
+                <div class="live-stat">
+                    <span class="live-stat-value" id="live-vpip">0%</span>
+                    <span class="live-stat-label">VPIP</span>
+                </div>
+                <div class="live-stat">
+                    <span class="live-stat-value" id="live-pfr">0%</span>
+                    <span class="live-stat-label">PFR</span>
+                </div>
+                <div class="live-stat">
+                    <span class="live-stat-value" id="live-3bet">0%</span>
+                    <span class="live-stat-label">3Bet</span>
+                </div>
+                <div class="live-stat">
+                    <span class="live-stat-value" id="live-winrate">0%</span>
+                    <span class="live-stat-label">勝率</span>
+                </div>
+            </div>
+
+            <!-- アクションボタン -->
+            <div id="action-phase" class="action-phase">
+                <div class="action-buttons-hud">
+                    <button class="btn btn-action btn-fold" onclick="recordAction('fold')">FOLD</button>
+                    <button class="btn btn-action btn-call" onclick="recordAction('call')">CALL</button>
+                    <button class="btn btn-action btn-raise" onclick="recordAction('raise')">RAISE</button>
+                </div>
+                <div class="action-buttons-hud action-secondary">
+                    <button class="btn btn-action-small btn-3bet" onclick="recordAction('3bet')">3BET</button>
+                    <button class="btn btn-action-small btn-4bet" onclick="recordAction('4bet')">4BET</button>
+                    <button class="btn btn-action-small btn-allin" onclick="recordAction('allin')">ALL-IN</button>
+                </div>
+            </div>
+
+            <!-- 参加中フェーズ -->
+            <div id="inhand-phase" class="action-phase" style="display: none;">
+                <div class="action-prompt inhand">🃏 ハンド進行中...</div>
+                <div class="result-buttons">
+                    <button class="btn btn-success btn-result" onclick="recordResult('win')">🏆 勝ち</button>
+                    <button class="btn btn-danger btn-result" onclick="recordResult('lose')">💔 負け</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- カードピッカーモーダル -->
+        <div id="card-picker-modal" class="modal">
+            <div class="modal-content glass-card card-picker-content">
+                <h3>ハンドを選択</h3>
+                <div class="selected-cards">
+                    <div class="selected-card" id="selected-card-1">?</div>
+                    <div class="selected-card" id="selected-card-2">?</div>
+                </div>
+                <div class="card-grid-container">
+                    <!-- ランク選択 -->
+                    <div class="rank-row">
+                        <button class="rank-btn" onclick="selectRank('A')">A</button>
+                        <button class="rank-btn" onclick="selectRank('K')">K</button>
+                        <button class="rank-btn" onclick="selectRank('Q')">Q</button>
+                        <button class="rank-btn" onclick="selectRank('J')">J</button>
+                        <button class="rank-btn" onclick="selectRank('T')">T</button>
+                        <button class="rank-btn" onclick="selectRank('9')">9</button>
+                        <button class="rank-btn" onclick="selectRank('8')">8</button>
+                    </div>
+                    <div class="rank-row">
+                        <button class="rank-btn" onclick="selectRank('7')">7</button>
+                        <button class="rank-btn" onclick="selectRank('6')">6</button>
+                        <button class="rank-btn" onclick="selectRank('5')">5</button>
+                        <button class="rank-btn" onclick="selectRank('4')">4</button>
+                        <button class="rank-btn" onclick="selectRank('3')">3</button>
+                        <button class="rank-btn" onclick="selectRank('2')">2</button>
+                    </div>
+                    <!-- スート選択 -->
+                    <div class="suit-row">
+                        <button class="suit-btn spade" onclick="selectSuit('s')">♠</button>
+                        <button class="suit-btn heart" onclick="selectSuit('h')">♥</button>
+                        <button class="suit-btn diamond" onclick="selectSuit('d')">♦</button>
+                        <button class="suit-btn club" onclick="selectSuit('c')">♣</button>
+                    </div>
+                </div>
+                <div class="modal-buttons">
+                    <button class="btn btn-secondary" onclick="closeCardPicker()">キャンセル</button>
+                    <button class="btn btn-danger btn-small" onclick="clearCards()">クリア</button>
+                    <button class="btn btn-primary" onclick="confirmCards()">決定</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- セッション終了画面 -->
+        <div id="cashout-screen" class="screen">
+            <header class="app-header">
+                <h2>セッション終了</h2>
+            </header>
+
+            <div class="glass-card">
+                <div class="form-group">
+                    <label for="cashout">キャッシュアウト (BB)</label>
+                    <input type="number" id="cashout" placeholder="150" required>
+                </div>
+                <button class="btn btn-primary btn-large" onclick="saveSession()">
+                    💾 セッションを保存
+                </button>
+            </div>
+        </div>
+
+        <!-- 履歴画面 -->
+        <div id="history-screen" class="screen">
+            <header class="app-header">
+                <button class="btn-back" onclick="showScreen('home-screen')">← 戻る</button>
+                <h2>セッション履歴</h2>
+                <button class="btn-delete-all" onclick="clearAllSessions()">🗑️</button>
+            </header>
+
+            <div class="period-filter">
+                <button class="filter-btn active" onclick="setHistoryPeriod('all')">全て</button>
+                <button class="filter-btn" onclick="setHistoryPeriod('week')">1週間</button>
+                <button class="filter-btn" onclick="setHistoryPeriod('month')">1ヶ月</button>
+            </div>
+
+            <div id="history-list" class="history-list">
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>

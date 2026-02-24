@@ -1,0 +1,1402 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>物流コスト・シミュレーター</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+    <style>
+        /* ===== CSS Reset & Variables ===== */
+        :root {
+            --primary: #4f46e5;
+            --primary-light: #818cf8;
+            --secondary: #0ea5e9;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --purple: #a855f7;
+            --bg: #f8fafc;
+            --bg-card: #ffffff;
+            --text: #1e293b;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --radius: 16px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* ===== Header ===== */
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 32px 24px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1rem;
+        }
+
+        /* ===== Main Layout ===== */
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        /* ===== Results Section (Top) ===== */
+        .results-top {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        @media (max-width: 900px) {
+            .results-top {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Total Cost Card */
+        .total-cost-card {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--purple) 100%);
+            color: white;
+            border-radius: var(--radius);
+            padding: 32px;
+            text-align: center;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .total-cost-card .label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin-bottom: 8px;
+        }
+
+        .total-cost-card .value {
+            font-size: 2.8rem;
+            font-weight: 800;
+            line-height: 1.2;
+        }
+
+        .total-cost-card .sub-stat {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.3);
+            font-size: 1rem;
+        }
+
+        .total-cost-card .sub-stat strong {
+            font-size: 1.4rem;
+        }
+
+        /* Quick Stats Grid */
+        .quick-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        @media (max-width: 600px) {
+            .quick-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: var(--shadow);
+            border-left: 4px solid var(--primary);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stat-card.storage {
+            border-left-color: var(--primary);
+        }
+
+        .stat-card.working {
+            border-left-color: var(--purple);
+        }
+
+        .stat-card.labor {
+            border-left-color: var(--secondary);
+        }
+
+        .stat-card.consumables {
+            border-left-color: var(--success);
+        }
+
+        .stat-card.delivery {
+            border-left-color: var(--warning);
+        }
+
+        .stat-card.management {
+            border-left-color: var(--danger);
+        }
+
+        .stat-card .icon {
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+        }
+
+        .stat-card .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            margin-bottom: 4px;
+        }
+
+        .stat-card .stat-value {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        /* ===== Two Column Layout ===== */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        @media (max-width: 900px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ===== Card Base ===== */
+        .card {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow);
+        }
+
+        .card h2 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* ===== Parameters ===== */
+        .param-section {
+            margin-bottom: 24px;
+        }
+
+        .param-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .param-section h3 {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .param-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .param-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .param-group.full {
+            grid-column: 1 / -1;
+        }
+
+        .param-group label {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+
+        .param-group input {
+            padding: 12px 14px;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            text-align: center;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            width: 100%;
+        }
+
+        .param-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        /* Slider */
+        .slider-group {
+            margin-bottom: 16px;
+        }
+
+        .slider-group .slider-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .slider-group .slider-label {
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+
+        .slider-group .slider-value {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .slider-group input[type="range"] {
+            width: 100%;
+            height: 8px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 4px;
+            appearance: none;
+            cursor: pointer;
+        }
+
+        .slider-group input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            background: white;
+            border: 3px solid var(--primary);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+        }
+
+        /* CSV Section */
+        .csv-dropzone {
+            border: 2px dashed var(--border);
+            border-radius: var(--radius);
+            padding: 32px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: var(--bg);
+        }
+
+        .csv-dropzone:hover {
+            border-color: var(--primary);
+            background: rgba(79, 70, 229, 0.05);
+        }
+
+        .csv-dropzone .icon {
+            font-size: 2.5rem;
+            margin-bottom: 12px;
+        }
+
+        .csv-dropzone p {
+            color: var(--text-light);
+            margin-bottom: 8px;
+        }
+
+        .csv-btn {
+            display: inline-block;
+            padding: 10px 24px;
+            background: var(--primary);
+            color: white;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 8px;
+        }
+
+        .csv-btn:hover {
+            background: var(--primary-light);
+        }
+
+        .csv-stats {
+            margin-top: 16px;
+            padding: 16px;
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid var(--success);
+            border-radius: 10px;
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .csv-stats.show {
+            display: block;
+        }
+
+        .csv-stats .csv-stats-title {
+            color: var(--success);
+            font-weight: 700;
+            font-size: 1rem;
+            margin-bottom: 4px;
+        }
+
+        .csv-stats .csv-filename {
+            color: var(--text);
+            font-weight: 500;
+            font-size: 0.85rem;
+            margin-bottom: 12px;
+            word-break: break-all;
+        }
+
+        .csv-stats ul {
+            list-style: none;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .csv-stats li {
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+
+        .csv-stats li span {
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .csv-dropzone.success {
+            border-color: var(--success);
+            background: rgba(34, 197, 94, 0.08);
+        }
+
+        .csv-dropzone.success .icon {
+            color: var(--success);
+        }
+
+        .filename-display {
+            font-size: 0.85rem;
+            color: var(--success);
+            font-weight: 600;
+            margin-top: 8px;
+            word-break: break-all;
+        }
+
+        /* CSV Columns Info */
+        .csv-columns-info {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .csv-columns-title {
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 12px;
+            color: var(--text);
+        }
+
+        .csv-columns-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+            margin-bottom: 12px;
+        }
+
+        .csv-columns-table th {
+            background: var(--primary);
+            color: white;
+            padding: 8px 10px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .csv-columns-table th:first-child {
+            border-radius: 6px 0 0 0;
+        }
+
+        .csv-columns-table th:last-child {
+            border-radius: 0 6px 0 0;
+        }
+
+        .csv-columns-table td {
+            padding: 8px 10px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-light);
+        }
+
+        .csv-columns-table td:first-child {
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .csv-columns-table tr.highlight {
+            background: rgba(79, 70, 229, 0.08);
+        }
+
+        .csv-columns-table tr.highlight td {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .download-template-btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: var(--success);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .download-template-btn:hover {
+            background: #16a34a;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .chart-container {
+            height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .area-price-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .area-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .area-group label {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            margin-bottom: 4px;
+        }
+
+        .area-group input {
+            padding: 8px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            text-align: right;
+            width: 100%;
+        }
+
+        /* Upload Success Banner */
+        .upload-success-banner {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 20px;
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            border-radius: 12px;
+            margin-top: 16px;
+            color: white;
+            animation: slideIn 0.4s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .upload-success-banner .success-icon {
+            font-size: 2.5rem;
+        }
+
+        .upload-success-banner .success-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .upload-success-banner .success-filename {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        /* Calculation Mode Options */
+        .calc-mode-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .calc-mode-option {
+            cursor: pointer;
+        }
+
+        .calc-mode-option input {
+            display: none;
+        }
+
+        .calc-mode-option .option-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 16px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .calc-mode-option input:checked+.option-box {
+            border-color: var(--primary);
+            background: rgba(79, 70, 229, 0.08);
+        }
+
+        .calc-mode-option .option-icon {
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+        }
+
+        .calc-mode-option .option-text {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+
+        .calc-mode-option .option-desc {
+            font-size: 0.75rem;
+            color: var(--text-light);
+        }
+
+        /* Start Calculation Button */
+        .start-calc-btn {
+            width: 100%;
+            padding: 16px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: white;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--purple) 100%);
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
+        }
+
+        .start-calc-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(79, 70, 229, 0.5);
+        }
+
+        .start-calc-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Required Tags */
+        .required-tag {
+            font-size: 0.65rem;
+            font-weight: 600;
+            padding: 2px 6px;
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            border-radius: 4px;
+            margin-left: 6px;
+            vertical-align: middle;
+        }
+
+        /* Warehouse Only Badge */
+        .warehouse-only-badge {
+            font-size: 0.65rem;
+            font-weight: 600;
+            padding: 3px 8px;
+            background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
+            color: white;
+            border-radius: 6px;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+
+        /* Section Hint (CSV loaded) */
+        .section-hint {
+            font-size: 0.85rem;
+            color: var(--success);
+            font-weight: 600;
+            margin-bottom: 12px;
+            padding: 8px 12px;
+            background: rgba(34, 197, 94, 0.1);
+            border-radius: 8px;
+            border-left: 3px solid var(--success);
+        }
+
+        /* Warehouse-only sections - hidden in delivery-only mode */
+        body.delivery-only-mode .warehouse-only-section {
+            display: none !important;
+        }
+
+        body.delivery-only-mode .warehouse-only {
+            display: none !important;
+        }
+
+        /* CSV loaded state - gray out manual inputs */
+        body.csv-loaded #volumeInputSection .param-group input {
+            background: #f1f5f9;
+            color: #94a3b8;
+            cursor: not-allowed;
+        }
+
+        body.csv-loaded #volumeInputSection .param-group label .required-tag {
+            background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+        }
+
+        /* Clickable Stat Cards */
+        .stat-card.clickable {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .stat-card.clickable:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .stat-card.clickable.active {
+            outline: 3px solid var(--primary);
+            outline-offset: 2px;
+        }
+
+        /* Breakdown Panel */
+        .breakdown-hint {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            margin-bottom: 16px;
+        }
+
+        .breakdown-content {
+            min-height: 300px;
+        }
+
+        .breakdown-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 250px;
+            color: var(--text-light);
+            text-align: center;
+        }
+
+        .placeholder-icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        /* Breakdown Formula Display */
+        .breakdown-formula {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .breakdown-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .formula-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px dashed var(--border);
+        }
+
+        .formula-row:last-child {
+            border-bottom: none;
+        }
+
+        .formula-label {
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+
+        .formula-value {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .formula-result {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--purple) 100%);
+            color: white;
+            padding: 16px;
+            border-radius: 12px;
+            margin-top: 16px;
+        }
+
+        .formula-result .formula-row {
+            border-bottom-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .formula-result .formula-label,
+        .formula-result .formula-value {
+            color: white;
+        }
+
+        .formula-result .formula-value {
+            font-size: 1.2rem;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 24px;
+            color: var(--text-light);
+            font-size: 0.85rem;
+            margin-top: 32px;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="header">
+        <h1>📦 物流コスト・シミュレーター</h1>
+        <p>倉庫運営＋配送の月間コストをリアルタイム試算</p>
+    </header>
+
+    <main class="main-container">
+        <!-- Results Top Section -->
+        <section class="results-top">
+            <div class="total-cost-card">
+                <div class="label">月間 総物流コスト</div>
+                <div class="value" id="totalCost">¥0</div>
+                <div class="sub-stat">
+                    1個口あたり <strong id="costPerParcel">¥0</strong>
+                </div>
+            </div>
+
+            <div class="quick-stats">
+                <div class="stat-card storage clickable" data-cost="storage">
+                    <div class="icon">🏢</div>
+                    <div class="stat-label">保管スペース</div>
+                    <div class="stat-value" id="costStorageQuick">¥0</div>
+                </div>
+                <div class="stat-card working clickable" data-cost="working">
+                    <div class="icon">🔧</div>
+                    <div class="stat-label">作業スペース</div>
+                    <div class="stat-value" id="costWorkingQuick">¥0</div>
+                </div>
+                <div class="stat-card labor clickable" data-cost="labor">
+                    <div class="icon">👷</div>
+                    <div class="stat-label">作業人件費</div>
+                    <div class="stat-value" id="costLaborQuick">¥0</div>
+                </div>
+                <div class="stat-card consumables clickable" data-cost="consumables">
+                    <div class="icon">📦</div>
+                    <div class="stat-label">消耗品費</div>
+                    <div class="stat-value" id="costConsumablesQuick">¥0</div>
+                </div>
+                <div class="stat-card delivery clickable" data-cost="delivery">
+                    <div class="icon">🚚</div>
+                    <div class="stat-label">配送費</div>
+                    <div class="stat-value" id="costDeliveryQuick">¥0</div>
+                </div>
+                <div class="stat-card management clickable" data-cost="management">
+                    <div class="icon">📋</div>
+                    <div class="stat-label">管理費</div>
+                    <div class="stat-value" id="costManagementQuick">¥0</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Two Column Content -->
+        <div class="content-grid">
+            <!-- Left: Parameters -->
+            <div class="card">
+                <h2>⚙️ パラメータ設定</h2>
+
+                <!-- CSV Upload -->
+                <div class="param-section">
+                    <h3>📁 出荷データ取込</h3>
+
+                    <!-- Column Specification -->
+                    <div class="csv-columns-info">
+                        <p class="csv-columns-title">📋 CSVカラム仕様</p>
+                        <table class="csv-columns-table">
+                            <thead>
+                                <tr>
+                                    <th>カラム名</th>
+                                    <th>説明</th>
+                                    <th>例</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>店舗CD</td>
+                                    <td>店舗コード</td>
+                                    <td>S001</td>
+                                </tr>
+                                <tr>
+                                    <td>店舗名</td>
+                                    <td>店舗の名称</td>
+                                    <td>東京本店</td>
+                                </tr>
+                                <tr>
+                                    <td>都道府県</td>
+                                    <td>配送先の都道府県</td>
+                                    <td>東京都</td>
+                                </tr>
+                                <tr>
+                                    <td>住所</td>
+                                    <td>詳細住所</td>
+                                    <td>渋谷区1-1-1</td>
+                                </tr>
+                                <tr>
+                                    <td>出荷日</td>
+                                    <td>出荷予定日</td>
+                                    <td>2025-02-01</td>
+                                </tr>
+                                <tr>
+                                    <td>商品CD</td>
+                                    <td>商品コード</td>
+                                    <td>P001</td>
+                                </tr>
+                                <tr>
+                                    <td>商品名</td>
+                                    <td>商品の名称</td>
+                                    <td>商品A</td>
+                                </tr>
+                                <tr class="highlight">
+                                    <td>入数</td>
+                                    <td>1ケースあたりのPC数</td>
+                                    <td>12</td>
+                                </tr>
+                                <tr class="highlight">
+                                    <td>総pc数</td>
+                                    <td>出荷ピース数（必須）</td>
+                                    <td>120</td>
+                                </tr>
+                                <tr>
+                                    <td>総cs数</td>
+                                    <td>(任意) 計算用</td>
+                                    <td>10</td>
+                                </tr>
+                                <tr>
+                                    <td>総個口数</td>
+                                    <td>(任意) 配送費計算用</td>
+                                    <td>8</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <button type="button" class="download-template-btn" onclick="downloadSampleCSV()">
+                            📥 サンプルCSVをダウンロード
+                        </button>
+                    </div>
+
+                    <div class="csv-dropzone" id="csvDropzone">
+                        <div class="icon" id="dropzoneIcon">📂</div>
+                        <p id="dropzoneText">CSVファイルをドラッグ＆ドロップ</p>
+                        <label class="csv-btn">
+                            ファイルを選択
+                            <input type="file" id="csvInput" accept=".csv" hidden>
+                        </label>
+                    </div>
+
+                    <!-- Upload Success Banner (Hidden by default) -->
+                    <div class="upload-success-banner" id="uploadSuccessBanner" style="display: none;">
+                        <div class="success-icon">✅</div>
+                        <div class="success-content">
+                            <p class="success-title">ファイル読込完了！</p>
+                            <p class="success-filename" id="successFilename"></p>
+                        </div>
+                    </div>
+
+                    <div class="csv-stats" id="csvStats">
+                        <ul>
+                            <li>総行数: <span id="statRows">0</span></li>
+                            <li>総PC数: <span id="statTotalPc">0</span></li>
+                            <li>総CS数: <span id="statTotalCs">0</span></li>
+                            <li>総個口: <span id="statTotalParcels">0</span></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Calculation Mode Selection -->
+                <div class="param-section">
+                    <h3>🎯 試算モード選択</h3>
+                    <div class="calc-mode-options">
+                        <label class="calc-mode-option">
+                            <input type="radio" name="calcMode" value="full" checked>
+                            <span class="option-box">
+                                <span class="option-icon">🏢🚚</span>
+                                <span class="option-text">庫内費用 ＋ 配送費</span>
+                                <span class="option-desc">倉庫運営と配送をまとめて試算</span>
+                            </span>
+                        </label>
+                        <label class="calc-mode-option">
+                            <input type="radio" name="calcMode" value="deliveryOnly">
+                            <span class="option-box">
+                                <span class="option-icon">🚚</span>
+                                <span class="option-text">配送費のみ</span>
+                                <span class="option-desc">都道府県と個口数から配送費を試算</span>
+                            </span>
+                        </label>
+                    </div>
+
+                    <button type="button" class="start-calc-btn" id="startCalcBtn">
+                        🚀 試算開始
+                    </button>
+                </div>
+
+                <!-- Volume Input -->
+                <div class="param-section" id="volumeInputSection">
+                    <h3>📝 物量入力（直接入力）</h3>
+                    <p class="section-hint" id="csvLoadedHint" style="display: none;">✅ CSVから自動取得済み</p>
+                    <div class="param-grid">
+                        <div class="param-group warehouse-only">
+                            <label>月間出荷CS数 <span class="required-tag">必須</span></label>
+                            <input type="number" id="inputMonthlyCs" value="5000">
+                        </div>
+                        <div class="param-group warehouse-only">
+                            <label>月間出荷PC数 <span class="required-tag">必須</span></label>
+                            <input type="number" id="inputMonthlyPc" value="25000">
+                        </div>
+                        <div class="param-group full">
+                            <label>月間出荷個口数 <span class="required-tag">必須</span></label>
+                            <input type="number" id="inputMonthlyParcels" value="3000">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Storage (warehouse-only) -->
+                <div class="param-section warehouse-only-section" id="storageSection">
+                    <h3>🏢 保管スペース <span class="warehouse-only-badge">庫内のみ</span></h3>
+                    <div class="slider-group">
+                        <div class="slider-header">
+                            <span class="slider-label">在庫保有週数</span>
+                            <span class="slider-value" id="weeksLabel">4週間</span>
+                        </div>
+                        <input type="range" id="stockWeeks" min="1" max="12" value="4">
+                    </div>
+                    <div class="param-grid">
+                        <div class="param-group">
+                            <label>1坪あたり保管CS</label>
+                            <input type="number" id="csPerTsubo" value="50">
+                        </div>
+                        <div class="param-group">
+                            <label>坪単価（円）</label>
+                            <input type="number" id="storageTsuboPrice" value="5500">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Working Space (warehouse-only) -->
+                <div class="param-section warehouse-only-section" id="workingSection">
+                    <h3>🔧 作業スペース <span class="warehouse-only-badge">庫内のみ</span></h3>
+                    <div class="param-grid">
+                        <div class="param-group">
+                            <label>必要作業坪数</label>
+                            <input type="number" id="workingTsubo" value="20">
+                        </div>
+                        <div class="param-group">
+                            <label>坪単価（円）</label>
+                            <input type="number" id="workingTsuboPrice" value="5500">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Labor (warehouse-only) -->
+                <div class="param-section warehouse-only-section" id="laborSection">
+                    <h3>👷 作業人件費 <span class="warehouse-only-badge">庫内のみ</span></h3>
+                    <div class="param-grid">
+                        <div class="param-group full">
+                            <label>作業員時給（円）</label>
+                            <input type="number" id="hourlyWage" value="1300">
+                        </div>
+                        <div class="param-group">
+                            <label>入荷生産性（CS/時）</label>
+                            <input type="number" id="inboundProductivity" value="200">
+                        </div>
+                        <div class="param-group">
+                            <label>ピッキング（pc/時）</label>
+                            <input type="number" id="pickingProductivity" value="150">
+                        </div>
+                        <div class="param-group full">
+                            <label>梱包生産性（個口/時）</label>
+                            <input type="number" id="packingProductivity" value="30">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Consumables (warehouse-only) -->
+                <div class="param-section warehouse-only-section" id="consumablesSection">
+                    <h3>📦 消耗品費 <span class="warehouse-only-badge">庫内のみ</span></h3>
+                    <div class="param-grid">
+                        <div class="param-group">
+                            <label>資材単価（円/個口）</label>
+                            <input type="number" id="consumablesPerParcel" value="50">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Delivery (Area Based) -->
+                <div class="param-section">
+                    <h3>🚚 配送費（地域別単価）</h3>
+                    <p style="font-size: 0.8rem; color: var(--text-light); margin-bottom: 12px;">
+                        ※拠点を中心としたエリアごとの平均単価を設定してください。</p>
+
+                    <div class="area-price-grid">
+                        <div class="area-group">
+                            <label>北海道</label>
+                            <input type="number" class="area-price" data-area="hokkaido" value="1200">
+                        </div>
+                        <div class="area-group">
+                            <label>東北</label>
+                            <input type="number" class="area-price" data-area="tohoku" value="850">
+                        </div>
+                        <div class="area-group">
+                            <label>関東</label>
+                            <input type="number" class="area-price" data-area="kanto" value="600">
+                        </div>
+                        <div class="area-group">
+                            <label>中部</label>
+                            <input type="number" class="area-price" data-area="chubu" value="700">
+                        </div>
+                        <div class="area-group">
+                            <label>近畿</label>
+                            <input type="number" class="area-price" data-area="kinki" value="750">
+                        </div>
+                        <div class="area-group">
+                            <label>中国</label>
+                            <input type="number" class="area-price" data-area="chugoku" value="900">
+                        </div>
+                        <div class="area-group">
+                            <label>四国</label>
+                            <input type="number" class="area-price" data-area="shikoku" value="900">
+                        </div>
+                        <div class="area-group">
+                            <label>九州</label>
+                            <input type="number" class="area-price" data-area="kyushu" value="1200">
+                        </div>
+                        <div class="area-group">
+                            <label>沖縄</label>
+                            <input type="number" class="area-price" data-area="okinawa" value="2000">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Management -->
+                <div class="param-section">
+                    <h3>📋 管理費</h3>
+                    <p style="font-size: 0.8rem; color: var(--text-light); margin-bottom: 12px;">※
+                        それぞれの合計費用に対して管理費率をかけて計算します</p>
+                    <div class="param-grid">
+                        <div class="param-group">
+                            <label>庫内管理費率（%）</label>
+                            <input type="number" id="warehouseMgmtRate" value="10">
+                        </div>
+                        <div class="param-group">
+                            <label>配送管理費率（%）</label>
+                            <input type="number" id="deliveryMgmtRate" value="5">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Calculation Breakdown -->
+            <div class="card" id="breakdownPanel">
+                <h2>🧮 計算根拠</h2>
+                <p class="breakdown-hint">左のコストカードをクリックすると計算式が表示されます</p>
+
+                <div class="breakdown-content" id="breakdownContent">
+                    <div class="breakdown-placeholder">
+                        <div class="placeholder-icon">👆</div>
+                        <p>コスト項目を選択してください</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <p>物流コスト・シミュレーター v2.0</p>
+    </footer>
+
+    <!-- External script FIRST so it defines state before inline script runs -->
+    <script src="script.js"></script>
+
+    <script>
+        // LEGACY INLINE SCRIPT - Disabled to use external script.js
+        // Check if script.js already loaded
+        if (typeof state !== 'undefined') {
+            console.log('Using external script.js');
+        } else {
+            // ===== State =====
+            const state = {
+                csvData: null,
+                monthlyCs: 5000,
+                monthlyPc: 25000,
+                monthlyParcels: 3000,
+            };
+
+            // ===== Chart =====
+            let costChart = null;
+
+            function initChart() {
+                const ctx = document.getElementById('costChart').getContext('2d');
+                costChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['保管スペース', '作業スペース', '人件費', '消耗品', '配送費', '管理費'],
+                        datasets: [{
+                            data: [0, 0, 0, 0, 0, 0],
+                            backgroundColor: ['#4f46e5', '#a855f7', '#0ea5e9', '#22c55e', '#f59e0b', '#ef4444'],
+                            borderWidth: 0,
+                            hoverOffset: 10
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    padding: 16,
+                                    font: { size: 12, family: "'Noto Sans JP', sans-serif" },
+                                    usePointStyle: true
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function (context) {
+                                        const value = context.raw;
+                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        const pct = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                        return `¥${value.toLocaleString()} (${pct}%)`;
+                                    }
+                                }
+                            }
+                        },
+                        cutout: '60%'
+                    }
+                });
+            }
+
+            function formatCurrency(v) { return `¥${v.toLocaleString()}`; }
+
+            function calculate() {
+                const monthlyCs = state.csvData ? state.monthlyCs : (parseInt(document.getElementById('inputMonthlyCs').value) || 0);
+                const monthlyPc = state.csvData ? state.monthlyPc : (parseInt(document.getElementById('inputMonthlyPc').value) || 0);
+                const monthlyParcels = state.csvData ? state.monthlyParcels : (parseInt(document.getElementById('inputMonthlyParcels').value) || 0);
+
+                const stockWeeks = parseInt(document.getElementById('stockWeeks').value) || 4;
+                const csPerTsubo = parseInt(document.getElementById('csPerTsubo').value) || 50;
+                const storageTsuboPrice = parseInt(document.getElementById('storageTsuboPrice').value) || 5500;
+                const workingTsubo = parseInt(document.getElementById('workingTsubo').value) || 20;
+                const workingTsuboPrice = parseInt(document.getElementById('workingTsuboPrice').value) || 5500;
+                const hourlyWage = parseInt(document.getElementById('hourlyWage').value) || 1300;
+                const inboundProd = parseInt(document.getElementById('inboundProductivity').value) || 200;
+                const pickingProd = parseInt(document.getElementById('pickingProductivity').value) || 150;
+                const packingProd = parseInt(document.getElementById('packingProductivity').value) || 30;
+                const consumablesPerParcel = parseInt(document.getElementById('consumablesPerParcel').value) || 50;
+                const deliveryPerParcel = parseInt(document.getElementById('deliveryPerParcel').value) || 650;
+                const fixedMgmt = parseInt(document.getElementById('fixedManagementCost').value) || 100000;
+                const mgmtRate = parseInt(document.getElementById('managementRate').value) || 10;
+
+                // Calculations
+                const avgStorageCs = (monthlyCs / 4) * stockWeeks;
+                const storageTsubo = Math.ceil(avgStorageCs / csPerTsubo);
+                const costStorage = storageTsubo * storageTsuboPrice;
+                const costWorking = workingTsubo * workingTsuboPrice;
+
+                const inboundHours = monthlyCs / inboundProd;
+                const pickingHours = monthlyPc / pickingProd;
+                const packingHours = monthlyParcels / packingProd;
+                const costLabor = Math.ceil((inboundHours + pickingHours + packingHours) * hourlyWage);
+
+                const costConsumables = monthlyParcels * consumablesPerParcel;
+                const costDelivery = monthlyParcels * deliveryPerParcel;
+                const costManagement = fixedMgmt + Math.ceil(costLabor * (mgmtRate / 100));
+
+                const totalCost = costStorage + costWorking + costLabor + costConsumables + costDelivery + costManagement;
+                const perParcel = monthlyParcels > 0 ? Math.ceil(totalCost / monthlyParcels) : 0;
+
+                // Update UI
+                document.getElementById('totalCost').textContent = formatCurrency(totalCost);
+                document.getElementById('costPerParcel').textContent = formatCurrency(perParcel);
+                document.getElementById('costStorageQuick').textContent = formatCurrency(costStorage);
+                document.getElementById('costWorkingQuick').textContent = formatCurrency(costWorking);
+                document.getElementById('costLaborQuick').textContent = formatCurrency(costLabor);
+                document.getElementById('costConsumablesQuick').textContent = formatCurrency(costConsumables);
+                document.getElementById('costDeliveryQuick').textContent = formatCurrency(costDelivery);
+                document.getElementById('costManagementQuick').textContent = formatCurrency(costManagement);
+
+                // Update Chart
+                costChart.data.datasets[0].data = [costStorage, costWorking, costLabor, costConsumables, costDelivery, costManagement];
+                costChart.update();
+            }
+
+            // CSV Handling
+            function handleCSV(file) {
+                Papa.parse(file, {
+                    header: true,
+                    skipEmptyLines: true,
+                    complete: function (results) {
+                        let totalPc = 0, totalCs = 0;
+                        results.data.forEach(row => {
+                            const pc = parseInt(row['総pc数'] || row['total_pc'] || 0);
+                            const qty = parseInt(row['入数'] || row['qty_per_case'] || 1);
+                            totalPc += pc;
+                            if (qty > 0) totalCs += Math.ceil(pc / qty);
+                        });
+                        const parcels = Math.ceil(totalCs * 0.8);
+                        state.monthlyPc = totalPc;
+                        state.monthlyCs = totalCs;
+                        state.monthlyParcels = parcels;
+                        state.csvData = results.data;
+
+                        document.getElementById('csvStats').classList.add('show');
+                        document.getElementById('statRows').textContent = results.data.length.toLocaleString();
+                        document.getElementById('statTotalPc').textContent = totalPc.toLocaleString();
+                        document.getElementById('statTotalCs').textContent = totalCs.toLocaleString();
+                        document.getElementById('statTotalParcels').textContent = parcels.toLocaleString();
+                        calculate();
+                    }
+                });
+            }
+
+            // Download Sample CSV Template
+            function downloadSampleCSV() {
+                const csvContent = `店舗CD,店舗名,都道府県,住所,出荷日,商品CD,商品名,入数,総pc数
+S001,東京本店,東京都,東京都渋谷区1-1-1,2025-02-01,P001,商品A,12,120
+S001,東京本店,東京都,東京都渋谷区1-1-1,2025-02-01,P002,商品B,24,48
+S002,大阪支店,大阪府,大阪府大阪市中央区2-2-2,2025-02-01,P001,商品A,12,60
+S002,大阪支店,大阪府,大阪府大阪市中央区2-2-2,2025-02-01,P003,商品C,6,30
+S003,名古屋店,愛知県,愛知県名古屋市中区3-3-3,2025-02-02,P002,商品B,24,72
+S003,名古屋店,愛知県,愛知県名古屋市中区3-3-3,2025-02-02,P004,商品D,10,50
+S004,福岡店,福岡県,福岡県福岡市博多区4-4-4,2025-02-02,P001,商品A,12,36
+S005,札幌店,北海道,北海道札幌市中央区5-5-5,2025-02-03,P003,商品C,6,18
+S005,札幌店,北海道,北海道札幌市中央区5-5-5,2025-02-03,P005,商品E,20,100
+S006,仙台店,宮城県,宮城県仙台市青葉区6-6-6,2025-02-03,P002,商品B,24,96`;
+
+                // Create blob with BOM for Excel compatibility
+                const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
+                const blob = new Blob([bom, csvContent], { type: 'text/csv;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'sample_template.csv';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+
+            // Event Listeners
+            document.addEventListener('DOMContentLoaded', () => {
+                initChart();
+                calculate();
+
+                document.getElementById('stockWeeks').addEventListener('input', (e) => {
+                    document.getElementById('weeksLabel').textContent = e.target.value + '週間';
+                    calculate();
+                });
+
+                document.querySelectorAll('input[type="number"], input[type="range"]').forEach(el => {
+                    el.addEventListener('input', calculate);
+                });
+
+                const dropzone = document.getElementById('csvDropzone');
+                dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.style.borderColor = '#4f46e5'; });
+                dropzone.addEventListener('dragleave', () => { dropzone.style.borderColor = '#e2e8f0'; });
+                dropzone.addEventListener('drop', e => {
+                    e.preventDefault();
+                    dropzone.style.borderColor = '#e2e8f0';
+                    if (e.dataTransfer.files[0]?.name.endsWith('.csv')) handleCSV(e.dataTransfer.files[0]);
+                });
+                document.getElementById('csvInput').addEventListener('change', e => {
+                    if (e.target.files[0]) handleCSV(e.target.files[0]);
+                });
+            });
+        } // End of else block for legacy script
+    </script>
+</body>
+
+</html>

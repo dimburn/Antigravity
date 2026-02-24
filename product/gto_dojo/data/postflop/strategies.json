@@ -1,0 +1,350 @@
+{
+    "meta": {
+        "description": "Simplified postflop GTO strategy by board texture and hand strength",
+        "version": "1.0",
+        "note": "Frequencies are simplified GTO approximations for training purposes"
+    },
+    "board_textures": {
+        "dry_high": {
+            "label": "ドライ・ハイ",
+            "example": "A-7-2 rainbow",
+            "description": "ドローが少なく、高いカードが含まれるボード"
+        },
+        "dry_low": {
+            "label": "ドライ・ロー",
+            "example": "8-4-2 rainbow",
+            "description": "ドローが少なく、低いカードのみのボード"
+        },
+        "wet_connected": {
+            "label": "ウェット・コネクト",
+            "example": "J-T-8 two-tone",
+            "description": "ストレート＆フラッシュドローが豊富"
+        },
+        "wet_flush": {
+            "label": "フラッシュドロー",
+            "example": "K-8-3 monotone",
+            "description": "3枚同スート、フラッシュドローが存在"
+        },
+        "paired": {
+            "label": "ペアボード",
+            "example": "9-9-4",
+            "description": "ボードにペアがある"
+        },
+        "broadway": {
+            "label": "ブロードウェイ",
+            "example": "K-Q-J",
+            "description": "ブロードウェイカードが複数"
+        },
+        "medium_connected": {
+            "label": "ミドル・コネクト",
+            "example": "8-7-5 two-tone",
+            "description": "中くらいのカードでドローあり"
+        }
+    },
+    "hand_categories": {
+        "nuts": {
+            "label": "ナッツ級",
+            "description": "セット以上、ナッツストレート/フラッシュ",
+            "strength": 6
+        },
+        "strong": {
+            "label": "強いハンド",
+            "description": "オーバーペア、トップペアグッドキッカー、ツーペア",
+            "strength": 5
+        },
+        "medium": {
+            "label": "中程度",
+            "description": "トップペア弱キッカー、セカンドペア、弱いツーペア",
+            "strength": 4
+        },
+        "weak": {
+            "label": "弱い",
+            "description": "サードペア以下、弱いペア",
+            "strength": 3
+        },
+        "draw": {
+            "label": "ドロー",
+            "description": "フラッシュドロー、オープンエンドストレートドロー",
+            "strength": 2.5
+        },
+        "air": {
+            "label": "エア",
+            "description": "何もない、ハイカードのみ",
+            "strength": 1
+        }
+    },
+    "strategies": {
+        "flop": {
+            "IP": {
+                "nuts": {
+                    "check": 0.15,
+                    "bet_small": 0.20,
+                    "bet_large": 0.65,
+                    "ev_boost": 3.0
+                },
+                "strong": {
+                    "check": 0.30,
+                    "bet_small": 0.45,
+                    "bet_large": 0.25,
+                    "ev_boost": 1.5
+                },
+                "medium": {
+                    "check": 0.50,
+                    "bet_small": 0.35,
+                    "bet_large": 0.15,
+                    "ev_boost": 0.5
+                },
+                "weak": {
+                    "check": 0.70,
+                    "bet_small": 0.20,
+                    "bet_large": 0.10,
+                    "ev_boost": -0.3
+                },
+                "draw": {
+                    "check": 0.40,
+                    "bet_small": 0.30,
+                    "bet_large": 0.30,
+                    "ev_boost": 0.2
+                },
+                "air": {
+                    "check": 0.65,
+                    "bet_small": 0.25,
+                    "bet_large": 0.10,
+                    "ev_boost": -1.0
+                }
+            },
+            "OOP": {
+                "nuts": {
+                    "check": 0.40,
+                    "bet_small": 0.20,
+                    "bet_large": 0.40,
+                    "ev_boost": 3.0
+                },
+                "strong": {
+                    "check": 0.55,
+                    "bet_small": 0.30,
+                    "bet_large": 0.15,
+                    "ev_boost": 1.5
+                },
+                "medium": {
+                    "check": 0.70,
+                    "bet_small": 0.25,
+                    "bet_large": 0.05,
+                    "ev_boost": 0.3
+                },
+                "weak": {
+                    "check": 0.85,
+                    "bet_small": 0.10,
+                    "bet_large": 0.05,
+                    "ev_boost": -0.5
+                },
+                "draw": {
+                    "check": 0.60,
+                    "bet_small": 0.25,
+                    "bet_large": 0.15,
+                    "ev_boost": 0.1
+                },
+                "air": {
+                    "check": 0.80,
+                    "bet_small": 0.15,
+                    "bet_large": 0.05,
+                    "ev_boost": -1.5
+                }
+            }
+        },
+        "turn": {
+            "IP": {
+                "nuts": {
+                    "check": 0.10,
+                    "bet_small": 0.15,
+                    "bet_large": 0.75,
+                    "ev_boost": 4.0
+                },
+                "strong": {
+                    "check": 0.25,
+                    "bet_small": 0.40,
+                    "bet_large": 0.35,
+                    "ev_boost": 2.0
+                },
+                "medium": {
+                    "check": 0.55,
+                    "bet_small": 0.30,
+                    "bet_large": 0.15,
+                    "ev_boost": 0.3
+                },
+                "weak": {
+                    "check": 0.80,
+                    "bet_small": 0.15,
+                    "bet_large": 0.05,
+                    "ev_boost": -0.5
+                },
+                "draw": {
+                    "check": 0.35,
+                    "bet_small": 0.25,
+                    "bet_large": 0.40,
+                    "ev_boost": 0.0
+                },
+                "air": {
+                    "check": 0.70,
+                    "bet_small": 0.15,
+                    "bet_large": 0.15,
+                    "ev_boost": -1.5
+                }
+            },
+            "OOP": {
+                "nuts": {
+                    "check": 0.30,
+                    "bet_small": 0.15,
+                    "bet_large": 0.55,
+                    "ev_boost": 4.0
+                },
+                "strong": {
+                    "check": 0.50,
+                    "bet_small": 0.30,
+                    "bet_large": 0.20,
+                    "ev_boost": 1.8
+                },
+                "medium": {
+                    "check": 0.75,
+                    "bet_small": 0.20,
+                    "bet_large": 0.05,
+                    "ev_boost": 0.2
+                },
+                "weak": {
+                    "check": 0.90,
+                    "bet_small": 0.08,
+                    "bet_large": 0.02,
+                    "ev_boost": -0.8
+                },
+                "draw": {
+                    "check": 0.55,
+                    "bet_small": 0.20,
+                    "bet_large": 0.25,
+                    "ev_boost": -0.2
+                },
+                "air": {
+                    "check": 0.85,
+                    "bet_small": 0.10,
+                    "bet_large": 0.05,
+                    "ev_boost": -2.0
+                }
+            }
+        },
+        "river": {
+            "IP": {
+                "nuts": {
+                    "check": 0.05,
+                    "bet_small": 0.10,
+                    "bet_large": 0.85,
+                    "ev_boost": 5.0
+                },
+                "strong": {
+                    "check": 0.20,
+                    "bet_small": 0.45,
+                    "bet_large": 0.35,
+                    "ev_boost": 2.5
+                },
+                "medium": {
+                    "check": 0.60,
+                    "bet_small": 0.30,
+                    "bet_large": 0.10,
+                    "ev_boost": 0.5
+                },
+                "weak": {
+                    "check": 0.85,
+                    "bet_small": 0.10,
+                    "bet_large": 0.05,
+                    "ev_boost": -0.5
+                },
+                "draw": {
+                    "check": 0.90,
+                    "bet_small": 0.05,
+                    "bet_large": 0.05,
+                    "ev_boost": -1.0
+                },
+                "air": {
+                    "check": 0.60,
+                    "bet_small": 0.10,
+                    "bet_large": 0.30,
+                    "ev_boost": -2.0
+                }
+            },
+            "OOP": {
+                "nuts": {
+                    "check": 0.20,
+                    "bet_small": 0.10,
+                    "bet_large": 0.70,
+                    "ev_boost": 5.0
+                },
+                "strong": {
+                    "check": 0.45,
+                    "bet_small": 0.35,
+                    "bet_large": 0.20,
+                    "ev_boost": 2.0
+                },
+                "medium": {
+                    "check": 0.70,
+                    "bet_small": 0.25,
+                    "bet_large": 0.05,
+                    "ev_boost": 0.3
+                },
+                "weak": {
+                    "check": 0.90,
+                    "bet_small": 0.08,
+                    "bet_large": 0.02,
+                    "ev_boost": -0.8
+                },
+                "draw": {
+                    "check": 0.95,
+                    "bet_small": 0.03,
+                    "bet_large": 0.02,
+                    "ev_boost": -1.5
+                },
+                "air": {
+                    "check": 0.65,
+                    "bet_small": 0.10,
+                    "bet_large": 0.25,
+                    "ev_boost": -2.5
+                }
+            }
+        },
+        "facing_bet": {
+            "nuts": {
+                "fold": 0.00,
+                "call": 0.20,
+                "raise": 0.80,
+                "ev_boost": 4.0
+            },
+            "strong": {
+                "fold": 0.05,
+                "call": 0.70,
+                "raise": 0.25,
+                "ev_boost": 1.5
+            },
+            "medium": {
+                "fold": 0.25,
+                "call": 0.65,
+                "raise": 0.10,
+                "ev_boost": 0.0
+            },
+            "weak": {
+                "fold": 0.65,
+                "call": 0.30,
+                "raise": 0.05,
+                "ev_boost": -1.0
+            },
+            "draw": {
+                "fold": 0.30,
+                "call": 0.45,
+                "raise": 0.25,
+                "ev_boost": -0.3
+            },
+            "air": {
+                "fold": 0.80,
+                "call": 0.10,
+                "raise": 0.10,
+                "ev_boost": -2.0
+            }
+        }
+    }
+}

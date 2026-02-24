@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#0a0a1a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="description" content="テキサスホールデム GTO練習アプリ — プリフロップからリバーまでGTOベースのシミュレーション練習">
+    <title>GTO Dojo</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <div id="app">
+
+        <!-- ===== ホーム画面 ===== -->
+        <div id="home-screen" class="screen active">
+            <header class="app-header">
+                <h1>🥋 GTO Dojo</h1>
+                <p class="subtitle">GTOを身体で覚えるポーカートレーニング</p>
+            </header>
+
+            <!-- クイックスタッツ -->
+            <div class="quick-stats">
+                <div class="quick-stat">
+                    <span class="qs-value" id="home-total-hands">0</span>
+                    <span class="qs-label">総ハンド数</span>
+                </div>
+                <div class="quick-stat">
+                    <span class="qs-value" id="home-gto-rate">—</span>
+                    <span class="qs-label">GTO一致率</span>
+                </div>
+                <div class="quick-stat">
+                    <span class="qs-value" id="home-ev-loss">—</span>
+                    <span class="qs-label">平均EVロス</span>
+                </div>
+            </div>
+
+            <!-- メニュー -->
+            <div class="menu-grid">
+                <div class="menu-card" onclick="UI.showScreen('setup-screen')">
+                    <span class="menu-icon">🎮</span>
+                    <span class="menu-label">シミュレーション</span>
+                    <span class="menu-desc">ハンドをプレイして練習</span>
+                </div>
+                <div class="menu-card" onclick="UI.showScreen('quiz-setup-screen')">
+                    <span class="menu-icon">❓</span>
+                    <span class="menu-label">クイズ</span>
+                    <span class="menu-desc">GTO知識をテスト</span>
+                </div>
+                <div class="menu-card" onclick="UI.showScreen('range-screen'); RangeViewer.init();">
+                    <span class="menu-icon">🗺️</span>
+                    <span class="menu-label">レンジ表</span>
+                    <span class="menu-desc">GTOレンジを確認</span>
+                </div>
+                <div class="menu-card" onclick="UI.showScreen('stats-screen')">
+                    <span class="menu-icon">📊</span>
+                    <span class="menu-label">成績</span>
+                    <span class="menu-desc">学習の進捗を確認</span>
+                </div>
+                <div class="menu-card" onclick="UI.showScreen('settings-screen')">
+                    <span class="menu-icon">⚙️</span>
+                    <span class="menu-label">設定</span>
+                    <span class="menu-desc">アプリの設定</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== セットアップ画面 ===== -->
+        <div id="setup-screen" class="screen">
+            <div class="header-bar">
+                <button class="btn-back" onclick="UI.showScreen('home-screen')">← 戻る</button>
+                <h2>シミュレーション設定</h2>
+            </div>
+
+            <div class="glass-card">
+                <div class="form-group">
+                    <label>ゲーム形式</label>
+                    <div class="toggle-group">
+                        <button type="button" class="toggle-btn active" data-group="gameType" data-value="cash"
+                            onclick="UI.toggleSelect(this)">💵 キャッシュ</button>
+                        <button type="button" class="toggle-btn" data-group="gameType" data-value="tournament"
+                            onclick="UI.toggleSelect(this)">🏆 トーナメント</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>テーブルサイズ</label>
+                    <div class="toggle-group">
+                        <button type="button" class="toggle-btn active" data-group="tableSize" data-value="6max"
+                            onclick="UI.toggleSelect(this)">6max</button>
+                        <button type="button" class="toggle-btn" data-group="tableSize" data-value="9max"
+                            onclick="UI.toggleSelect(this)">9max</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>スタック深度 (BB)</label>
+                    <div class="toggle-group">
+                        <button type="button" class="toggle-btn" data-group="stackDepth" data-value="50"
+                            onclick="UI.toggleSelect(this)">50BB</button>
+                        <button type="button" class="toggle-btn active" data-group="stackDepth" data-value="100"
+                            onclick="UI.toggleSelect(this)">100BB</button>
+                        <button type="button" class="toggle-btn" data-group="stackDepth" data-value="200"
+                            onclick="UI.toggleSelect(this)">200BB</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>プレイモード</label>
+                    <div class="toggle-group">
+                        <button type="button" class="toggle-btn active" data-group="playMode" data-value="single"
+                            onclick="UI.toggleSelect(this)">🎯 単発</button>
+                        <button type="button" class="toggle-btn" data-group="playMode" data-value="session"
+                            onclick="UI.toggleSelect(this)">🔥 連戦</button>
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <button class="btn btn-primary btn-large" onclick="Game.start()">
+                    🎯 プレイ開始
+                </button>
+            </div>
+        </div>
+
+        <!-- ===== ゲーム画面 ===== -->
+        <div id="game-screen" class="screen">
+            <!-- ゲームヘッダー -->
+            <div class="header-bar" style="margin-bottom:0;">
+                <button class="btn-back" onclick="if(confirm('ホームに戻りますか？')){Game.endSession();}">← 戻る</button>
+                <h2>シミュレーション</h2>
+            </div>
+            <!-- ゲーム情報バー -->
+            <div class="game-info-bar">
+                <div class="game-info-item">
+                    <div class="label">ハンド</div>
+                    <div class="value" id="game-hand-num">#1</div>
+                </div>
+                <div class="game-info-item">
+                    <div class="label">ポジション</div>
+                    <div class="value" id="game-position">BTN</div>
+                </div>
+                <div class="game-info-item">
+                    <div class="label">ストリート</div>
+                    <div class="value" id="game-street">プリフロップ</div>
+                </div>
+                <div class="game-info-item">
+                    <div class="label">スタック</div>
+                    <div class="value" id="game-stack">100BB</div>
+                </div>
+            </div>
+
+            <!-- 相手のアクション表示 -->
+            <div id="villain-action-area" class="glass-card" style="display:none;">
+                <div style="text-align:center; font-size:0.9rem; color:var(--text-secondary);">
+                    <span id="villain-action-text"></span>
+                </div>
+            </div>
+
+            <!-- プリフロップ結果ミニ表示 -->
+            <div id="preflop-mini-result" class="preflop-mini" style="display:none;"></div>
+
+            <!-- ポット表示 -->
+            <div class="pot-display">
+                <div class="pot-label">ポット</div>
+                <div class="pot-value" id="game-pot">1.5 BB</div>
+            </div>
+
+            <!-- ボードカード -->
+            <div class="board-display" id="board-cards" style="display:none;"></div>
+
+            <!-- ハンドカード -->
+            <div class="card-display" id="hero-cards">
+                <!-- JSで動的生成 -->
+            </div>
+
+            <!-- アクションボタン -->
+            <div id="action-area">
+                <div class="action-grid" id="action-buttons">
+                    <!-- JSで動的生成 -->
+                </div>
+            </div>
+
+            <!-- ストリート間フィードバックオーバーレイ -->
+            <div id="street-feedback-overlay" class="feedback-overlay" style="display:none;"></div>
+        </div>
+
+        <!-- ===== 結果画面 ===== -->
+        <div id="result-screen" class="screen">
+            <div class="header-bar">
+                <h2>ハンド結果</h2>
+            </div>
+
+            <div class="glass-card feedback-panel" id="feedback-panel">
+                <!-- JSで動的生成 -->
+            </div>
+
+            <div style="margin-top:var(--spacing-md); display:flex; gap:var(--spacing-sm);">
+                <button class="btn btn-primary" style="flex:1;" onclick="Game.nextHand()">
+                    🎴 次のハンド →
+                </button>
+                <button class="btn btn-secondary" style="flex:0 0 auto;padding:12px 16px;" onclick="Game.endSession()">
+                    🏁 終了
+                </button>
+            </div>
+        </div>
+
+        <!-- ===== 成績画面 ===== -->
+        <div id="stats-screen" class="screen">
+            <div class="header-bar">
+                <button class="btn-back" onclick="UI.showScreen('home-screen')">← 戻る</button>
+                <h2>成績</h2>
+            </div>
+
+            <div class="glass-card">
+                <div class="stats-grid" id="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-value" id="stat-total-hands">0</span>
+                        <span class="stat-label">総ハンド数</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="stat-gto-rate">—</span>
+                        <span class="stat-label">GTO一致率</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="stat-ev-loss">—</span>
+                        <span class="stat-label">平均EVロス</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="stat-sessions">0</span>
+                        <span class="stat-label">セッション数</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card" style="margin-top:var(--spacing-md);">
+                <h3 style="font-size:0.9rem; margin-bottom:var(--spacing-md);">ポジション別 GTO一致率</h3>
+                <div id="position-stats">
+                    <!-- JSで動的生成 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== 設定画面 ===== -->
+        <div id="settings-screen" class="screen">
+            <div class="header-bar">
+                <button class="btn-back" onclick="UI.showScreen('home-screen')">← 戻る</button>
+                <h2>設定</h2>
+            </div>
+
+            <div class="glass-card">
+                <div class="form-group">
+                    <label>プレイヤー名</label>
+                    <input type="text" id="setting-name" placeholder="Hero"
+                        style="width:100%;padding:10px 14px;border:1px solid var(--border-color);border-radius:var(--radius-sm);background:var(--bg-secondary);color:var(--text-primary);font-family:var(--font-body);font-size:0.9rem;"
+                        onchange="Stats.saveSetting('playerName', this.value)">
+                </div>
+
+                <div class="divider"></div>
+
+                <button class="btn btn-danger btn-large" onclick="Stats.clearAll()">
+                    🗑️ 全データをリセット
+                </button>
+            </div>
+        </div>
+
+        <!-- ===== セッションサマリー画面 ===== -->
+        <div id="session-summary-screen" class="screen">
+            <div class="header-bar">
+                <h2>セッション結果</h2>
+            </div>
+            <div class="glass-card" id="session-summary-content">
+                <!-- JSで動的生成 -->
+            </div>
+            <div style="margin-top:var(--spacing-md); display:flex; gap:var(--spacing-sm);">
+                <button class="btn btn-primary btn-large" style="flex:1;" onclick="UI.showScreen('home-screen')">
+                    🏠 ホームに戻る
+                </button>
+            </div>
+        </div>
+
+        <!-- ===== クイズ セットアップ画面 ===== -->
+        <div id="quiz-setup-screen" class="screen">
+            <div class="header-bar">
+                <button class="btn-back" onclick="UI.showScreen('home-screen')">← 戻る</button>
+                <h2>クイズ設定</h2>
+            </div>
+            <div class="glass-card">
+                <div class="form-group">
+                    <label>出題範囲</label>
+                    <div class="toggle-group">
+                        <button type="button" class="toggle-btn active" data-group="quizMode" data-value="preflop"
+                            onclick="UI.toggleSelect(this)">🃏 プリフロップ</button>
+                        <button type="button" class="toggle-btn" data-group="quizMode" data-value="postflop"
+                            onclick="UI.toggleSelect(this)">🎲 ポストフロップ</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>問題数</label>
+                    <div class="toggle-group">
+                        <button type="button" class="toggle-btn" data-group="quizCount" data-value="5"
+                            onclick="UI.toggleSelect(this)">5問</button>
+                        <button type="button" class="toggle-btn active" data-group="quizCount" data-value="10"
+                            onclick="UI.toggleSelect(this)">10問</button>
+                        <button type="button" class="toggle-btn" data-group="quizCount" data-value="20"
+                            onclick="UI.toggleSelect(this)">20問</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>制限時間</label>
+                    <div class="toggle-group">
+                        <button type="button" class="toggle-btn" data-group="quizTimer" data-value="off"
+                            onclick="UI.toggleSelect(this)">なし</button>
+                        <button type="button" class="toggle-btn" data-group="quizTimer" data-value="10"
+                            onclick="UI.toggleSelect(this)">10秒</button>
+                        <button type="button" class="toggle-btn active" data-group="quizTimer" data-value="15"
+                            onclick="UI.toggleSelect(this)">15秒</button>
+                    </div>
+                </div>
+                <div class="divider"></div>
+                <button class="btn btn-primary btn-large" onclick="Quiz.start()">
+                    ❓ クイズ開始
+                </button>
+            </div>
+        </div>
+
+        <!-- ===== クイズ ゲーム画面 ===== -->
+        <div id="quiz-game-screen" class="screen">
+            <div id="quiz-progress"></div>
+            <div id="quiz-timer" style="margin:8px 0;"></div>
+            <div class="glass-card" id="quiz-question-area">
+                <!-- JSで動的生成 -->
+            </div>
+            <div class="action-grid" id="quiz-answer-buttons" style="margin-top:12px;">
+                <!-- JSで動的生成 -->
+            </div>
+            <div id="quiz-answer-feedback" style="display:none;margin-top:12px;">
+                <!-- JSで動的生成 -->
+            </div>
+        </div>
+
+        <!-- ===== クイズ 結果画面 ===== -->
+        <div id="quiz-result-screen" class="screen">
+            <div class="header-bar">
+                <h2>クイズ結果</h2>
+            </div>
+            <div class="glass-card" id="quiz-result-content">
+                <!-- JSで動的生成 -->
+            </div>
+            <div style="margin-top:var(--spacing-md);display:flex;gap:var(--spacing-sm);">
+                <button class="btn btn-secondary btn-large" style="flex:1;"
+                    onclick="UI.showScreen('quiz-setup-screen')">
+                    🔄 もう一回
+                </button>
+                <button class="btn btn-primary btn-large" style="flex:1;" onclick="UI.showScreen('home-screen')">
+                    🏠 ホーム
+                </button>
+            </div>
+        </div>
+
+        <!-- ===== レンジビューア画面 ===== -->
+        <div id="range-screen" class="screen">
+            <div class="header-bar">
+                <button class="btn-back" onclick="UI.showScreen('home-screen')">← 戻る</button>
+                <h2>レンジ表</h2>
+            </div>
+            <div class="glass-card" id="range-controls">
+                <!-- JSで動的生成 -->
+            </div>
+            <div class="glass-card" id="range-grid" style="padding:8px;overflow-x:auto;">
+                <!-- JSで動的生成 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="toast"></div>
+
+    <!-- Scripts -->
+    <script src="js/gto.js"></script>
+    <script src="js/stats.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/game.js"></script>
+    <script src="js/quiz.js"></script>
+    <script src="js/range_viewer.js"></script>
+    <script src="js/app.js"></script>
+</body>
+
+</html>

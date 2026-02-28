@@ -330,6 +330,13 @@ body::before {
     grid-template-columns: 1fr 1fr;
     gap: var(--spacing-sm);
     margin-top: var(--spacing-md);
+    padding-bottom: var(--spacing-lg);
+}
+
+/* Ensure game screen scrolls properly */
+#game-screen {
+    padding-bottom: var(--spacing-2xl);
+    overflow-y: auto;
 }
 
 .action-btn {
@@ -1136,4 +1143,850 @@ body::before {
     .menu-grid {
         grid-template-columns: repeat(3, 1fr);
     }
+}
+
+/* ===== AI Loading Overlay ===== */
+#ai-loading-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 10, 26, 0.85);
+    backdrop-filter: blur(8px);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+
+.ai-loading-content {
+    text-align: center;
+    animation: fadeIn 0.3s ease;
+}
+
+.ai-spinner {
+    width: 48px;
+    height: 48px;
+    border: 3px solid rgba(139, 92, 246, 0.2);
+    border-top-color: var(--accent-primary);
+    border-radius: 50%;
+    animation: aiSpin 0.8s linear infinite;
+    margin: 0 auto 16px;
+}
+
+@keyframes aiSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.ai-loading-text {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+.ai-loading-inline {
+    text-align: center;
+    padding: 12px;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    animation: pulse 1.5s ease infinite;
+}
+
+/* ===== Street Feedback Detailed ===== */
+.sf-detailed {
+    max-width: 420px;
+    width: 100%;
+    text-align: left;
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: var(--spacing-lg);
+}
+
+.sf-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    justify-content: center;
+}
+
+.sf-emoji {
+    font-size: 1.5rem;
+}
+
+.sf-street-label {
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+.sf-action-compare {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 12px;
+}
+
+.sf-action-box {
+    flex: 1;
+    text-align: center;
+    padding: 10px;
+    border-radius: var(--radius-sm);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+}
+
+.sf-action-box.correct {
+    border-color: rgba(16, 185, 129, 0.4);
+    background: rgba(16, 185, 129, 0.08);
+}
+
+.sf-action-box.wrong {
+    border-color: rgba(239, 68, 68, 0.4);
+    background: rgba(239, 68, 68, 0.08);
+}
+
+.sf-action-box.sf-action-gto {
+    border-color: rgba(16, 185, 129, 0.4);
+    background: rgba(16, 185, 129, 0.08);
+}
+
+.sf-action-label {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 4px;
+}
+
+.sf-action-value {
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+.sf-action-arrow {
+    font-size: 1.2rem;
+    color: var(--text-muted);
+    font-weight: 700;
+}
+
+.sf-ev-loss {
+    text-align: center;
+    color: var(--accent-danger);
+    font-size: 0.9rem;
+    margin-bottom: 12px;
+    padding: 6px;
+    background: rgba(239, 68, 68, 0.08);
+    border-radius: var(--radius-sm);
+}
+
+.sf-ev-perfect {
+    text-align: center;
+    color: var(--accent-success);
+    font-size: 0.9rem;
+    margin-bottom: 12px;
+    padding: 6px;
+    background: rgba(16, 185, 129, 0.08);
+    border-radius: var(--radius-sm);
+}
+
+.sf-hand-info {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.sf-info-item {
+    flex: 1;
+    padding: 8px;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-sm);
+    font-size: 0.8rem;
+    border: 1px solid var(--border-color);
+}
+
+.sf-info-label {
+    display: block;
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    margin-bottom: 2px;
+}
+
+.sf-next-btn {
+    margin-top: 16px;
+    width: 100%;
+}
+
+/* ===== Frequency Bar Chart ===== */
+.freq-bar-container {
+    margin: 12px 0;
+    padding: 10px;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+}
+
+.freq-bar-title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+}
+
+.freq-bar-row {
+    display: flex;
+    align-items: center;
+    margin: 4px 0;
+    gap: 8px;
+}
+
+.freq-label {
+    width: 80px;
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    flex-shrink: 0;
+}
+
+.freq-bar-track {
+    flex: 1;
+    height: 22px;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.freq-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    padding: 0 6px;
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: white;
+    min-width: fit-content;
+    transition: width 0.5s ease;
+}
+
+/* ===== AI Explanation Section ===== */
+.ai-explanation-section {
+    margin-top: 12px;
+    padding: 12px;
+    background: rgba(139, 92, 246, 0.06);
+    border-radius: var(--radius-sm);
+    border-left: 3px solid var(--accent-primary);
+}
+
+.ai-explanation-header {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--accent-primary);
+    margin-bottom: 6px;
+}
+
+.ai-explanation-text {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+.ai-details {
+    margin-top: 8px;
+}
+
+.ai-details summary {
+    cursor: pointer;
+    font-size: 0.78rem;
+    color: var(--accent-secondary);
+    font-weight: 600;
+    padding: 4px 0;
+    list-style: none;
+}
+
+.ai-details summary::before {
+    content: '▶ ';
+    font-size: 0.6rem;
+}
+
+.ai-details[open] summary::before {
+    content: '▼ ';
+}
+
+.ai-details>p {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-top: 6px;
+}
+
+.ai-detail-sub {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin-top: 6px;
+    padding-left: 8px;
+    border-left: 2px solid var(--border-color);
+}
+
+/* ===== Street Results (Full Result) ===== */
+.street-results-section {
+    margin-top: 16px;
+}
+
+.section-title {
+    font-size: 0.85rem;
+    margin-bottom: 10px;
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.street-result-item {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.street-result-item:last-child {
+    border-bottom: none;
+}
+
+.street-result-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.street-result-label {
+    font-size: 0.85rem;
+}
+
+.street-result-action {
+    font-size: 0.8rem;
+    text-align: right;
+}
+
+.street-result-action .gto-action {
+    color: var(--accent-success);
+    font-weight: 600;
+}
+
+.ev-loss-badge {
+    display: inline-block;
+    color: var(--accent-danger);
+    font-family: var(--font-mono);
+    font-weight: 600;
+    font-size: 0.78rem;
+    margin-left: 4px;
+}
+
+.street-detail-expand {
+    margin-top: 8px;
+}
+
+.street-detail-trigger {
+    cursor: pointer;
+    font-size: 0.75rem;
+    color: var(--accent-secondary);
+    font-weight: 600;
+    list-style: none;
+    padding: 4px 0;
+}
+
+.street-detail-trigger::before {
+    content: '▶ ';
+    font-size: 0.6rem;
+}
+
+details[open]>.street-detail-trigger::before {
+    content: '▼ ';
+}
+
+.street-detail-content {
+    padding: 10px;
+    margin-top: 6px;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+}
+
+.detail-item {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+}
+
+.detail-label {
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.detail-explanation {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border-color);
+}
+
+.detail-reason {
+    margin-top: 6px;
+}
+
+.detail-reason>p {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+/* ===== AI Hand Review Card ===== */
+.ai-hand-review {
+    padding: 14px;
+    background: rgba(139, 92, 246, 0.06);
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    animation: slideUp 0.4s ease;
+}
+
+.ai-review-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--accent-primary);
+}
+
+.ai-grade-badge {
+    margin-left: auto;
+    padding: 2px 10px;
+    border-radius: var(--radius-full);
+    font-size: 0.8rem;
+    font-weight: 800;
+    font-family: var(--font-mono);
+}
+
+.ai-grade-badge.grade-a {
+    background: var(--accent-success);
+    color: white;
+}
+
+.ai-grade-badge.grade-b {
+    background: rgba(16, 185, 129, 0.7);
+    color: white;
+}
+
+.ai-grade-badge.grade-c {
+    background: var(--accent-warning);
+    color: #1a1a2e;
+}
+
+.ai-grade-badge.grade-d {
+    background: rgba(245, 158, 11, 0.7);
+    color: #1a1a2e;
+}
+
+.ai-grade-badge.grade-f {
+    background: var(--accent-danger);
+    color: white;
+}
+
+.ai-review-summary {
+    font-size: 0.85rem;
+    color: var(--text-primary);
+    line-height: 1.6;
+    margin-bottom: 10px;
+}
+
+.ai-review-item {
+    padding: 8px 0;
+    border-top: 1px solid rgba(139, 92, 246, 0.1);
+}
+
+.ai-review-item-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--accent-secondary);
+    margin-bottom: 4px;
+}
+
+.ai-review-item p {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+.ai-review-item.mistake {
+    background: rgba(239, 68, 68, 0.06);
+    padding: 10px;
+    border-radius: var(--radius-sm);
+    border-left: 3px solid var(--accent-danger);
+}
+
+/* ===== v2: Card Back ===== */
+.playing-card.card-back {
+    background: var(--gradient-primary);
+    color: white;
+    box-shadow: var(--shadow-md);
+}
+
+.card-back-design {
+    font-size: 1.5rem;
+    opacity: 0.7;
+}
+
+.playing-card.card-small.card-back .card-back-design {
+    font-size: 1.2rem;
+}
+
+/* ===== v2: EV Comparison Bars ===== */
+.ev-comparison-container {
+    margin: 12px 0;
+    padding: 12px;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+}
+
+.ev-comparison-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+}
+
+.ev-bar-row {
+    margin: 8px 0;
+    padding: 6px 8px;
+    border-radius: var(--radius-sm);
+    transition: background var(--transition-fast);
+}
+
+.ev-bar-row.user-selected {
+    background: rgba(139, 92, 246, 0.08);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+.ev-bar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.ev-bar-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.ev-bar-stats {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+}
+
+.ev-badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: var(--radius-full);
+    font-family: var(--font-mono);
+}
+
+.ev-badge.positive {
+    color: var(--accent-success);
+    background: rgba(16, 185, 129, 0.12);
+}
+
+.ev-badge.negative {
+    color: var(--accent-danger);
+    background: rgba(239, 68, 68, 0.12);
+}
+
+.user-choice-marker {
+    font-size: 0.7rem;
+    color: var(--accent-primary);
+    font-weight: 700;
+    font-family: var(--font-body);
+}
+
+.ev-bar-track {
+    height: 8px;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.ev-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.5s ease;
+}
+
+.ev-bar-reason {
+    margin-top: 4px;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+    padding-left: 4px;
+    border-left: 2px solid var(--border-color);
+}
+
+/* ===== v2: Why Wrong Card ===== */
+.why-wrong-card {
+    margin: 12px 0;
+    padding: 12px;
+    background: rgba(239, 68, 68, 0.06);
+    border-radius: var(--radius-sm);
+    border-left: 3px solid var(--accent-danger);
+    animation: slideUp 0.3s ease;
+}
+
+.why-wrong-header {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--accent-danger);
+    margin-bottom: 6px;
+}
+
+.why-wrong-text {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+.why-wrong-inline {
+    padding: 8px;
+    margin-bottom: 8px;
+    background: rgba(239, 68, 68, 0.06);
+    border-radius: var(--radius-sm);
+    border-left: 3px solid var(--accent-danger);
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+/* ===== v2: Why Best Card ===== */
+.why-best-card {
+    margin: 12px 0;
+    padding: 12px;
+    background: rgba(16, 185, 129, 0.06);
+    border-radius: var(--radius-sm);
+    border-left: 3px solid var(--accent-success);
+}
+
+.why-best-header {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--accent-success);
+    margin-bottom: 6px;
+}
+
+.why-best-text {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+.why-best-inline {
+    padding: 8px;
+    margin-bottom: 8px;
+    background: rgba(16, 185, 129, 0.06);
+    border-radius: var(--radius-sm);
+    border-left: 3px solid var(--accent-success);
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+/* ===== v2: Key Insight Card ===== */
+.key-insight-card {
+    margin: 12px 0;
+    padding: 10px 14px;
+    background: rgba(245, 158, 11, 0.06);
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.key-insight-icon {
+    font-size: 1rem;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.key-insight-text {
+    font-size: 0.82rem;
+    color: var(--text-primary);
+    line-height: 1.5;
+    font-weight: 500;
+}
+
+.key-insight-inline {
+    padding: 8px;
+    margin-top: 8px;
+    background: rgba(245, 158, 11, 0.06);
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(245, 158, 11, 0.15);
+    font-size: 0.8rem;
+    color: var(--text-primary);
+    line-height: 1.5;
+}
+
+/* ===== v2: Showdown Section ===== */
+.showdown-section {
+    margin: 16px 0;
+    padding: 16px;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    animation: slideUp 0.4s ease;
+}
+
+.showdown-title {
+    text-align: center;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text-accent);
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.showdown-cards {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+}
+
+.showdown-player {
+    text-align: center;
+    flex: 1;
+}
+
+.showdown-label {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 6px;
+}
+
+.showdown-hand {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+    margin-bottom: 4px;
+}
+
+.showdown-hand-name {
+    font-size: 0.85rem;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    color: var(--text-primary);
+    margin-top: 4px;
+}
+
+.showdown-vs {
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--text-muted);
+    padding: 0 4px;
+}
+
+/* ===== v2: Board Display in Results ===== */
+.board-display-result {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+    margin: 12px 0;
+}
+
+/* ===== v2: End Reason Card ===== */
+.end-reason-card {
+    text-align: center;
+    padding: 10px;
+    background: rgba(16, 185, 129, 0.08);
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    font-size: 0.85rem;
+    color: var(--accent-success);
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+
+/* ===== v2: Villain Cards Display ===== */
+#villain-cards-display {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+    margin: 8px 0;
+}
+
+/* ===== v2: Deep Dive Section (もっと詳しく) ===== */
+.deep-dive-section {
+    margin: 12px 0;
+}
+
+.deep-dive-trigger {
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--accent-secondary);
+    padding: 8px 12px;
+    background: rgba(6, 182, 212, 0.06);
+    border: 1px solid rgba(6, 182, 212, 0.2);
+    border-radius: var(--radius-sm);
+    list-style: none;
+    text-align: center;
+    transition: all var(--transition-fast);
+}
+
+.deep-dive-trigger:active {
+    background: rgba(6, 182, 212, 0.12);
+}
+
+.deep-dive-trigger::before {
+    content: '▶ ';
+    font-size: 0.6rem;
+}
+
+details[open]>.deep-dive-trigger::before {
+    content: '▼ ';
+}
+
+.deep-dive-content {
+    margin-top: 8px;
+    padding: 12px;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    animation: slideUp 0.2s ease;
+}
+
+.deep-dive-item {
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.deep-dive-item:last-child {
+    border-bottom: none;
+}
+
+.deep-dive-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--accent-secondary);
+    margin-bottom: 4px;
+}
+
+.deep-dive-item p {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin: 0;
 }

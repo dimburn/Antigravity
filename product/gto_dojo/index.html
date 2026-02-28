@@ -11,7 +11,7 @@
     <title>GTO Dojo</title>
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=2">
 </head>
 
 <body>
@@ -146,6 +146,10 @@
                     <div class="value" id="game-position">BTN</div>
                 </div>
                 <div class="game-info-item">
+                    <div class="label">VS</div>
+                    <div class="value" id="game-villain-pos" style="color:var(--accent-danger);">—</div>
+                </div>
+                <div class="game-info-item">
                     <div class="label">ストリート</div>
                     <div class="value" id="game-street">プリフロップ</div>
                 </div>
@@ -228,13 +232,44 @@
                         <span class="stat-label">GTO一致率</span>
                     </div>
                     <div class="stat-item">
-                        <span class="stat-value" id="stat-ev-loss">—</span>
-                        <span class="stat-label">平均EVロス</span>
+                        <span class="stat-value" id="stat-vpip">—</span>
+                        <span class="stat-label">VPIP</span>
                     </div>
                     <div class="stat-item">
-                        <span class="stat-value" id="stat-sessions">0</span>
-                        <span class="stat-label">セッション数</span>
+                        <span class="stat-value" id="stat-pfr">—</span>
+                        <span class="stat-label">PFR</span>
                     </div>
+                </div>
+            </div>
+
+            <div class="glass-card" style="margin-top:var(--spacing-md);">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div style="width:48%;">
+                        <div class="stat-item" style="border:1px solid var(--border-color); padding:8px;">
+                            <span class="stat-value" id="stat-ev-loss">—</span>
+                            <span class="stat-label">平均EVロス</span>
+                        </div>
+                    </div>
+                    <div style="width:48%;">
+                        <div class="stat-item" style="border:1px solid var(--border-color); padding:8px;">
+                            <span class="stat-value" id="stat-sessions">0</span>
+                            <span class="stat-label">セッション数</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card" style="margin-top:var(--spacing-md);">
+                <h3 style="font-size:0.9rem; margin-bottom:var(--spacing-md);">ストリート別 ミス率</h3>
+                <div style="display:flex; justify-content:space-between; text-align:center; font-size:0.85rem;">
+                    <div style="flex:1;">事前<br><span id="stat-miss-preflop"
+                            style="font-weight:bold;color:var(--accent-warning);">—</span></div>
+                    <div style="flex:1;">フロップ<br><span id="stat-miss-flop"
+                            style="font-weight:bold;color:var(--accent-warning);">—</span></div>
+                    <div style="flex:1;">ターン<br><span id="stat-miss-turn"
+                            style="font-weight:bold;color:var(--accent-warning);">—</span></div>
+                    <div style="flex:1;">リバー<br><span id="stat-miss-river"
+                            style="font-weight:bold;color:var(--accent-warning);">—</span></div>
                 </div>
             </div>
 
@@ -378,17 +413,26 @@
         </div>
     </div>
 
+    <!-- AI Loading Overlay -->
+    <div id="ai-loading-overlay" style="display:none;">
+        <div class="ai-loading-content">
+            <div class="ai-spinner"></div>
+            <p class="ai-loading-text">🤖 AI分析中...</p>
+        </div>
+    </div>
+
     <!-- Toast -->
     <div id="toast" class="toast"></div>
 
     <!-- Scripts -->
-    <script src="js/gto.js"></script>
-    <script src="js/stats.js"></script>
-    <script src="js/ui.js"></script>
-    <script src="js/game.js"></script>
-    <script src="js/quiz.js"></script>
-    <script src="js/range_viewer.js"></script>
-    <script src="js/app.js"></script>
+    <script src="js/gto.js?v=2"></script>
+    <script src="js/stats.js?v=3"></script>
+    <script src="js/ai.js?v=4"></script>
+    <script src="js/ui.js?v=4"></script>
+    <script src="js/game.js?v=4"></script>
+    <script src="js/quiz.js?v=2"></script>
+    <script src="js/range_viewer.js?v=2"></script>
+    <script src="js/app.js?v=2"></script>
 </body>
 
 </html>

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gto-dojo-v4';
+const CACHE_NAME = 'gto-dojo-v17';
 const ASSETS = [
     './',
     './index.html',
@@ -8,6 +8,7 @@ const ASSETS = [
     './js/gto.js',
     './js/stats.js',
     './js/ui.js',
+    './js/ai.js',
     './js/quiz.js',
     './js/range_viewer.js',
     './data/preflop/cash_6max.json',
@@ -23,7 +24,7 @@ self.addEventListener('install', (e) => {
     self.skipWaiting();
 });
 
-// Activate
+// Activate — 古いキャッシュを削除
 self.addEventListener('activate', (e) => {
     e.waitUntil(
         caches.keys().then((names) =>
@@ -35,9 +36,15 @@ self.addEventListener('activate', (e) => {
     self.clients.claim();
 });
 
-// Fetch — cache first, then network
+// Fetch — network first, cache fallback（常に最新を取得）
 self.addEventListener('fetch', (e) => {
     e.respondWith(
-        caches.match(e.request).then((cached) => cached || fetch(e.request))
+        fetch(e.request)
+            .then((response) => {
+                const clone = response.clone();
+                caches.open(CACHE_NAME).then((cache) => cache.put(e.request, clone));
+                return response;
+            })
+            .catch(() => caches.match(e.request))
     );
 });

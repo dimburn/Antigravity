@@ -32,8 +32,12 @@ const Stats = (() => {
             gtoMatches: 0,
             totalEvLoss: 0,
             sessionCount: 0,
+            vpipCount: 0,
+            pfrCount: 0,
+            preflopHands: 0,
             byPosition: {},
-            bySpot: {}
+            bySpot: {},
+            streetMisses: { preflop: { count: 0, miss: 0 }, flop: { count: 0, miss: 0 }, turn: { count: 0, miss: 0 }, river: { count: 0, miss: 0 } }
         };
     }
 
@@ -108,6 +112,40 @@ const Stats = (() => {
         saveStats();
     }
 
+    function recordFullHand(state) {
+        if (!state || !state.streetResults || state.streetResults.length === 0) return;
+
+        let isPreflopActed = false;
+
+        state.streetResults.forEach(r => {
+            if (!r.userAction) return;
+
+            // ストリート別のミス記録
+            const street = r.street === 'preflop' ? 'preflop' : (r.street === 'flop' ? 'flop' : (r.street === 'turn' ? 'turn' : 'river'));
+            if (stats.streetMisses[street]) {
+                stats.streetMisses[street].count++;
+                if (!r.match) stats.streetMisses[street].miss++;
+            }
+
+            // VPIP / PFRの計算（プリフロップの最初のアクション）
+            if (r.street === 'preflop' && !isPreflopActed) {
+                isPreflopActed = true;
+                stats.preflopHands++;
+                const act = r.userAction;
+                // VPIP: fold, check 以外
+                if (act !== 'fold' && act !== 'check') {
+                    stats.vpipCount++;
+                }
+                // PFR: raise系
+                if (act === 'raise' || act === 'raise_small' || act === 'raise_large' || act === '3bet' || act === '4bet') {
+                    stats.pfrCount++;
+                }
+            }
+        });
+
+        saveStats();
+    }
+
     // === 統計取得 ===
 
     function getGTORate() {
@@ -136,6 +174,18 @@ const Stats = (() => {
         return stats.bySpot;
     }
 
+    function getAdvancedStats() {
+        const vpip = stats.preflopHands > 0 ? (stats.vpipCount / stats.preflopHands * 100).toFixed(1) : '-';
+        const pfr = stats.preflopHands > 0 ? (stats.pfrCount / stats.preflopHands * 100).toFixed(1) : '-';
+
+        const streetStats = {};
+        for (const [s, data] of Object.entries(stats.streetMisses)) {
+            streetStats[s] = data.count > 0 ? (data.miss / data.count * 100).toFixed(1) + '%' : '-';
+        }
+
+        return { vpip, pfr, streetStats };
+    }
+
     function getAllStats() {
         return { ...stats };
     }
@@ -156,6 +206,7 @@ const Stats = (() => {
     // === 公開API ===
     return {
         recordHand,
+        recordFullHand,
         saveSession,
         getSessions,
         getGTORate,
@@ -164,6 +215,7 @@ const Stats = (() => {
         getSessionCount,
         getPositionStats,
         getSpotStats,
+        getAdvancedStats,
         getAllStats,
         saveSetting,
         getSetting,
